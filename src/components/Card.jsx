@@ -63,6 +63,28 @@ export default function Card({ o, onClick, index }) {
         <span style={{ fontSize: 10, color: "var(--text-faint, #7A7A7A)" }}>💰 {o.inv}</span>
       </div>
 
+      {/* News summary */}
+      {o.not && (
+        <div style={{
+          background: "var(--news-bg, #F0FBF4)", borderRadius: 8,
+          padding: "8px 10px", borderLeft: "3px solid var(--accent, #2EA55D)",
+        }}>
+          <div style={{ fontSize: 9, fontWeight: 700, color: "var(--accent, #218C48)", textTransform: "uppercase", letterSpacing: .5, marginBottom: 3 }}>
+            📰 Última notícia
+          </div>
+          <div style={{
+            fontSize: 11, color: "var(--text-muted, #4A4A4A)", lineHeight: 1.45,
+            display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical",
+            overflow: "hidden", textOverflow: "ellipsis",
+          }}>
+            {o.not}
+          </div>
+          <div style={{ fontSize: 9, color: "var(--text-faint, #7A7A7A)", marginTop: 4, opacity: .8 }}>
+            {o.src}
+          </div>
+        </div>
+      )}
+
       {o.marcos && (
         <div style={{ borderTop: "1px solid var(--border, #E0F7EA)", paddingTop: 8 }}>
           {o.marcos.map((m, i) => <Bar key={i} l={m.l} p={m.p} />)}
