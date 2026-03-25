@@ -1,0 +1,44 @@
+{
+  "name": "painel-obras-ce",
+  "private": false,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Painel interativo de acompanhamento das obras estruturantes do Ceará — AJE Fortaleza",
+  "license": "MIT",
+  "author": "AJE Fortaleza",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tiagoggl12/painel-obras-ce.git"
+  },
+  "homepage": "https://github.com/tiagoggl12/painel-obras-ce",
+  "keywords": [
+    "ceara",
+    "obras",
+    "infraestrutura",
+    "painel",
+    "aje",
+    "fortaleza",
+    "react"
+  ],
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "eslint": "^9.39.4",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.5.2",
+    "globals": "^17.4.0",
+    "vite": "^8.0.1"
+  }
+}
