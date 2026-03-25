@@ -1,4 +1,8 @@
-* {
+/* ── Imports ──────────────────────────────────────────────── */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,500;9..40,700;9..40,800&display=swap');
+
+/* ── Reset ────────────────────────────────────────────────── */
+*, *::before, *::after {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
@@ -7,4 +11,149 @@
 body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* ── Scrollbar ────────────────────────────────────────────── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #7EDDA0; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #2A3D30; }
+
+/* ── CSS Variables (Light) ────────────────────────────────── */
+:root {
+  --bg-gradient: linear-gradient(180deg, #F0FBF4 0%, #FFF 40%);
+  --text: #1A1A1A;
+  --text-muted: #4A4A4A;
+  --text-faint: #7A7A7A;
+  --accent: #218C48;
+  --border: #E0F7EA;
+  --border-hover: #4CC97A;
+  --card-bg: #FFF;
+  --card-shadow-hover: rgba(181,236,204,.5);
+  --kpi-bg: #FFF;
+  --kpi-value: #1B6B3A;
+  --filter-bg: #E0F7EA;
+  --filter-active: #1B6B3A;
+  --filter-text: #1B6B3A;
+  --input-bg: #FFF;
+  --input-border: #B5ECCC;
+  --ring-track: #E0F7EA;
+  --modal-overlay: rgba(13, 59, 30, .55);
+  --news-bg: #F0FBF4;
+}
+
+/* ── CSS Variables (Dark) ─────────────────────────────────── */
+.dark {
+  --bg-gradient: linear-gradient(180deg, #0F1A14 0%, #0F1A14 100%);
+  --text: #E8F5EC;
+  --text-muted: #9AB8A5;
+  --text-faint: #6A8A76;
+  --accent: #4CC97A;
+  --border: #2A3D30;
+  --border-hover: #3A5540;
+  --card-bg: #162018;
+  --card-shadow-hover: rgba(0,0,0,.4);
+  --kpi-bg: #162018;
+  --kpi-value: #4CC97A;
+  --filter-bg: #1D2B22;
+  --filter-active: #2EA55D;
+  --filter-text: #9AB8A5;
+  --input-bg: #1D2B22;
+  --input-border: #2A3D30;
+  --ring-track: #2A3D30;
+  --modal-overlay: rgba(0, 0, 0, .7);
+  --news-bg: #1D2B22;
+}
+
+/* ── Card Enter Animation ─────────────────────────────────── */
+@keyframes cardEnter {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-enter {
+  animation: cardEnter .5s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* ── Modal Animations ─────────────────────────────────────── */
+@keyframes overlayIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(.92) translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-overlay {
+  animation: overlayIn .25s ease both;
+}
+
+.modal-content {
+  animation: modalIn .35s cubic-bezier(.22, 1, .36, 1) both;
+}
+
+/* ── Badge Pulse ──────────────────────────────────────────── */
+@keyframes badgePulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .7; }
+}
+
+.badge-pulse {
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+/* ── Filter Scroll (Mobile) ──────────────────────────────── */
+.filter-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.filter-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Search Input Focus ──────────────────────────────────── */
+.search-input:focus {
+  border-color: #2EA55D !important;
+  box-shadow: 0 0 0 3px rgba(46, 165, 93, .15);
+}
+
+.dark .search-input:focus {
+  box-shadow: 0 0 0 3px rgba(46, 165, 93, .25);
+}
+
+/* ── KPI Hover ────────────────────────────────────────────── */
+.kpi-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .08);
+}
+
+.dark .kpi-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
+}
+
+/* ── Responsive ──────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .filter-scroll {
+    flex-shrink: 0;
+    max-width: 100%;
+  }
+
+  .search-input {
+    width: 100% !important;
+  }
 }
