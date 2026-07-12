@@ -5,11 +5,13 @@ import Filters from "./components/Filters";
 import KPI from "./components/KPI";
 import Card from "./components/Card";
 import Modal from "./components/Modal";
+import MapView from "./components/MapView";
 
 export default function App() {
   const [filter, setFilter] = useState("Todos");
   const [search, setSearch] = useState("");
   const [sort, setSort] = useState("default");
+  const [view, setView] = useState(() => localStorage.getItem("painel-view") || "cards");
   const [sel, setSel] = useState(null);
   const [now, setNow] = useState(new Date());
   const [dark, setDark] = useState(() => {
@@ -29,6 +31,11 @@ export default function App() {
     document.documentElement.classList.toggle("dark", dark);
     localStorage.setItem("painel-dark", dark);
   }, [dark]);
+
+  // Persist view mode
+  useEffect(() => {
+    localStorage.setItem("painel-view", view);
+  }, [view]);
 
   // Filtered & sorted
   const filtered = OBRAS.filter((o) =>
@@ -68,23 +75,34 @@ export default function App() {
           search={search} setSearch={setSearch}
           sort={sort} setSort={setSort}
           count={sorted.length}
+          view={view} setView={setView}
         />
 
-        {/* Cards grid */}
-        <div key={`${filter}-${sort}`} style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))",
-          gap: 16,
-        }}>
-          {sorted.map((o, i) => (
-            <Card key={o.id} o={o} onClick={setSel} index={i} />
-          ))}
-        </div>
+        {view === "map" ? (
+          <MapView
+            obras={sorted}
+            dark={dark}
+            onSelect={(id) => setSel(OBRAS.find((o) => o.id === id) ?? null)}
+          />
+        ) : (
+          <>
+            {/* Cards grid */}
+            <div key={`${filter}-${sort}`} style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(330px, 1fr))",
+              gap: 16,
+            }}>
+              {sorted.map((o, i) => (
+                <Card key={o.id} o={o} onClick={setSel} index={i} />
+              ))}
+            </div>
 
-        {sorted.length === 0 && (
-          <div style={{ textAlign: "center", padding: 60, color: "var(--text-faint, #7A7A7A)" }}>
-            Nenhuma obra encontrada.
-          </div>
+            {sorted.length === 0 && (
+              <div style={{ textAlign: "center", padding: 60, color: "var(--text-faint, #7A7A7A)" }}>
+                Nenhuma obra encontrada.
+              </div>
+            )}
+          </>
         )}
 
         <footer style={{
