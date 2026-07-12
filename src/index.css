@@ -146,6 +146,25 @@ body {
   box-shadow: 0 4px 16px rgba(0, 0, 0, .3);
 }
 
+/* ── News Feed ───────────────────────────────────────────── */
+.news-item[role="button"]:hover,
+.news-item[role="button"]:focus-visible {
+  border-color: var(--border-hover, #4CC97A) !important;
+  box-shadow: 0 6px 24px var(--card-shadow-hover, rgba(181, 236, 204, .5)) !important;
+  transform: translateY(-2px);
+  outline: none;
+}
+
+/* ── Tab Nav (mobile) ────────────────────────────────────── */
+.tab-nav {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.tab-nav::-webkit-scrollbar {
+  display: none;
+}
+
 /* ── Map: markers ────────────────────────────────────────── */
 .obra-marker {
   background: none;

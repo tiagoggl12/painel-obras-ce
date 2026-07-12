@@ -5,7 +5,7 @@ import Bar from "./Bar";
 
 export default function Card({ o, onClick, index }) {
   const [h, setH] = useState(false);
-  const fresh = o.tag && o.tag.includes("mar/2026");
+  const fresh = o.tag && ["mar/2026", "jun/2026", "jul/2026"].includes(o.tag);
 
   return (
     <div
