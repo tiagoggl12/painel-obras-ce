@@ -1,8 +1,35 @@
 import { EIXOS, SORT_OPTIONS } from "../data/obras";
 
-export default function Filters({ filter, setFilter, search, setSearch, sort, setSort, count }) {
+const VIEWS = [
+  { key: "cards", label: "▦ Cards" },
+  { key: "map", label: "🗺️ Mapa" },
+];
+
+export default function Filters({ filter, setFilter, search, setSearch, sort, setSort, count, view, setView }) {
   return (
     <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18, alignItems: "center" }}>
+      {/* View toggle: cards / map */}
+      <div role="group" aria-label="Modo de visualização" style={{
+        display: "flex", background: "var(--filter-bg, #E0F7EA)",
+        borderRadius: 10, padding: 3,
+      }}>
+        {VIEWS.map((v) => (
+          <button
+            key={v.key}
+            onClick={() => setView(v.key)}
+            aria-label={`Visualizar em ${v.key === "map" ? "mapa" : "cards"}`}
+            aria-pressed={view === v.key}
+            style={{
+              padding: "7px 13px", border: "none", borderRadius: 8,
+              fontSize: 11, fontWeight: 700, cursor: "pointer", whiteSpace: "nowrap",
+              background: view === v.key ? "var(--filter-active, #1B6B3A)" : "transparent",
+              color: view === v.key ? "#fff" : "var(--filter-text, #1B6B3A)",
+              transition: "all .2s ease",
+            }}
+          >{v.label}</button>
+        ))}
+      </div>
+
       {/* Filter pills — horizontal scroll on mobile */}
       <div className="filter-scroll" style={{
         display: "flex", gap: 0, background: "var(--filter-bg, #E0F7EA)",
@@ -25,7 +52,8 @@ export default function Filters({ filter, setFilter, search, setSearch, sort, se
         ))}
       </div>
 
-      {/* Sort dropdown */}
+      {/* Sort dropdown (não se aplica ao mapa) */}
+      {view !== "map" && (
       <select
         value={sort}
         onChange={(e) => setSort(e.target.value)}
@@ -42,6 +70,7 @@ export default function Filters({ filter, setFilter, search, setSearch, sort, se
           <option key={o.key} value={o.key}>{o.label}</option>
         ))}
       </select>
+      )}
 
       {/* Search with clear button */}
       <div style={{ position: "relative", display: "inline-flex", alignItems: "center" }}>

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { C, statusColor, progressColor } from "../data/obras";
+import { C, progressColor } from "../data/obras";
 import Ring from "./Ring";
 import Bar from "./Bar";
 
