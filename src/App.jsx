@@ -6,6 +6,7 @@ import KPI from "./components/KPI";
 import Card from "./components/Card";
 import Modal from "./components/Modal";
 import MapView from "./components/MapView";
+import ChuvaMap from "./components/ChuvaMap";
 import TabNav from "./components/TabNav";
 import BrasilView from "./components/BrasilView";
 import NewsFeed from "./components/NewsFeed";
@@ -90,7 +91,9 @@ export default function App() {
               view={view} setView={setView}
             />
 
-            {view === "map" ? (
+            {view === "chuva" ? (
+              <ChuvaMap dark={dark} />
+            ) : view === "map" ? (
               <MapView
                 obras={sorted}
                 dark={dark}

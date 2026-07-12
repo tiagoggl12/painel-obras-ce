@@ -4,12 +4,15 @@ import http from "node:http";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { MUNICIPIOS } from "./src/data/municipios.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DIST = path.join(__dirname, "dist");
 const PORT = Number(process.env.PORT || 3000);
 const NEWS_UPSTREAM = process.env.NEWS_UPSTREAM || "https://news.google.com/rss/search";
-const CACHE_TTL_MS = 10 * 60 * 1000; // 10 min
+const CHUVA_UPSTREAM = process.env.CHUVA_UPSTREAM || "https://api.open-meteo.com/v1/forecast";
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 min (notícias)
+const CHUVA_TTL_MS = 30 * 60 * 1000; // 30 min (precipitação)
 const MAX_ITEMS = 25;
 
 const MIME = {
@@ -123,6 +126,49 @@ async function handleNews(q, res) {
   }
 }
 
+// ── /api/chuva — precipitação nos municípios do CE ──────────
+// Consulta em lote o Open-Meteo (sem chave): acumulado de ontem,
+// hoje e previsão de amanhã para cada município da malha.
+let chuvaCache = null; // { ts, payload }
+
+async function handleChuva(res) {
+  if (chuvaCache && Date.now() - chuvaCache.ts < CHUVA_TTL_MS) {
+    res.writeHead(200, { "content-type": "application/json", "x-cache": "hit" });
+    return res.end(chuvaCache.payload);
+  }
+
+  try {
+    const lats = MUNICIPIOS.map((m) => m.lat).join(",");
+    const lngs = MUNICIPIOS.map((m) => m.lng).join(",");
+    const url = `${CHUVA_UPSTREAM}?latitude=${lats}&longitude=${lngs}` +
+      `&daily=precipitation_sum&past_days=1&forecast_days=2&timezone=America/Fortaleza`;
+    const upstream = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!upstream.ok) throw new Error(`upstream ${upstream.status}`);
+    const data = await upstream.json();
+    const results = Array.isArray(data) ? data : [data];
+
+    const dias = results[0]?.daily?.time || [];
+    const cidades = MUNICIPIOS.map((m, i) => ({
+      nome: m.nome,
+      lat: m.lat,
+      lng: m.lng,
+      // mm[0] = ontem, mm[1] = hoje, mm[2] = amanhã (previsão)
+      mm: (results[i]?.daily?.precipitation_sum || []).map((v) => (v == null ? null : Math.round(v * 10) / 10)),
+    }));
+
+    const payload = JSON.stringify({ updatedAt: new Date().toISOString(), dias, cidades });
+    chuvaCache = { ts: Date.now(), payload };
+    res.writeHead(200, { "content-type": "application/json", "x-cache": "miss" });
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: String(err?.message || err) }));
+  }
+}
+
 // ── Estáticos + fallback SPA ────────────────────────────────
 async function handleStatic(pathname, res) {
   let filePath = path.normalize(path.join(DIST, pathname));
@@ -155,6 +201,7 @@ const server = http.createServer(async (req, res) => {
   }
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   if (url.pathname === "/api/news") return handleNews(url.searchParams.get("q"), res);
+  if (url.pathname === "/api/chuva") return handleChuva(res);
   if (url.pathname === "/api/health") {
     res.writeHead(200, { "content-type": "application/json" });
     return res.end(JSON.stringify({ ok: true }));

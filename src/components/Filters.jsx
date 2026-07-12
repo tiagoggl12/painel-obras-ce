@@ -3,6 +3,7 @@ import { EIXOS, SORT_OPTIONS } from "../data/obras";
 const VIEWS = [
   { key: "cards", label: "▦ Cards" },
   { key: "map", label: "🗺️ Mapa" },
+  { key: "chuva", label: "🌧️ Chuvas" },
 ];
 
 export default function Filters({ filter, setFilter, search, setSearch, sort, setSort, count, view, setView }) {
@@ -17,7 +18,7 @@ export default function Filters({ filter, setFilter, search, setSearch, sort, se
           <button
             key={v.key}
             onClick={() => setView(v.key)}
-            aria-label={`Visualizar em ${v.key === "map" ? "mapa" : "cards"}`}
+            aria-label={`Visualizar ${v.key === "map" ? "em mapa" : v.key === "chuva" ? "mapa de chuvas" : "em cards"}`}
             aria-pressed={view === v.key}
             style={{
               padding: "7px 13px", border: "none", borderRadius: 8,
@@ -29,6 +30,9 @@ export default function Filters({ filter, setFilter, search, setSearch, sort, se
           >{v.label}</button>
         ))}
       </div>
+
+      {/* Filtros de obras não se aplicam ao mapa de chuvas */}
+      {view !== "chuva" && <>
 
       {/* Filter pills — horizontal scroll on mobile */}
       <div className="filter-scroll" style={{
@@ -53,7 +57,7 @@ export default function Filters({ filter, setFilter, search, setSearch, sort, se
       </div>
 
       {/* Sort dropdown (não se aplica ao mapa) */}
-      {view !== "map" && (
+      {view === "cards" && (
       <select
         value={sort}
         onChange={(e) => setSort(e.target.value)}
@@ -107,6 +111,8 @@ export default function Filters({ filter, setFilter, search, setSearch, sort, se
       <span aria-live="polite" style={{ fontSize: 11, color: "var(--text-faint, #7A7A7A)" }}>
         {count} obra{count !== 1 ? "s" : ""}
       </span>
+
+      </>}
     </div>
   );
 }
