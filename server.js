@@ -11,8 +11,10 @@ const DIST = path.join(__dirname, "dist");
 const PORT = Number(process.env.PORT || 3000);
 const NEWS_UPSTREAM = process.env.NEWS_UPSTREAM || "https://news.google.com/rss/search";
 const CHUVA_UPSTREAM = process.env.CHUVA_UPSTREAM || "https://api.open-meteo.com/v1/forecast";
+const NORMAIS_UPSTREAM = process.env.NORMAIS_UPSTREAM || "https://archive-api.open-meteo.com/v1/archive";
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 min (notícias)
-const CHUVA_TTL_MS = 30 * 60 * 1000; // 30 min (precipitação)
+const CHUVA_TTL_MS = 30 * 60 * 1000; // 30 min (precipitação ao vivo)
+const NORMAIS_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias (climatologia)
 const MAX_ITEMS = 25;
 
 const MIME = {
@@ -169,6 +171,66 @@ async function handleChuva(res) {
   }
 }
 
+// ── /api/normais — média anual de precipitação (climatologia) ──
+// Histórico ERA5 do Open-Meteo dos últimos 10 anos completos, somado
+// por município e dividido pelos anos. Calculado uma vez e mantido em
+// cache por 30 dias (a primeira chamada pode levar ~1 min).
+let normaisCache = null;    // { ts, payload }
+let normaisPromise = null;  // evita cálculos concorrentes
+
+async function computeNormais() {
+  const anoFim = new Date().getFullYear() - 1; // últimos 10 anos completos
+  const anoIni = anoFim - 9;
+  const ANOS = 10;
+  const BATCH = 15;
+
+  const cidades = [];
+  for (let i = 0; i < MUNICIPIOS.length; i += BATCH) {
+    const grupo = MUNICIPIOS.slice(i, i + BATCH);
+    const lats = grupo.map((m) => m.lat).join(",");
+    const lngs = grupo.map((m) => m.lng).join(",");
+    const url = `${NORMAIS_UPSTREAM}?latitude=${lats}&longitude=${lngs}` +
+      `&start_date=${anoIni}-01-01&end_date=${anoFim}-12-31` +
+      `&daily=precipitation_sum&timezone=America/Fortaleza`;
+    const upstream = await fetch(url, {
+      headers: { accept: "application/json" },
+      signal: AbortSignal.timeout(60000),
+    });
+    if (!upstream.ok) throw new Error(`upstream ${upstream.status}`);
+    const data = await upstream.json();
+    const results = Array.isArray(data) ? data : [data];
+    grupo.forEach((m, j) => {
+      const soma = (results[j]?.daily?.precipitation_sum || []).reduce((s, v) => s + (v || 0), 0);
+      cidades.push({ nome: m.nome, lat: m.lat, lng: m.lng, media: Math.round(soma / ANOS) });
+    });
+  }
+
+  return JSON.stringify({
+    updatedAt: new Date().toISOString(),
+    periodo: `${anoIni}–${anoFim}`,
+    cidades,
+  });
+}
+
+async function handleNormais(res) {
+  if (normaisCache && Date.now() - normaisCache.ts < NORMAIS_TTL_MS) {
+    res.writeHead(200, { "content-type": "application/json", "x-cache": "hit" });
+    return res.end(normaisCache.payload);
+  }
+  try {
+    if (!normaisPromise) {
+      normaisPromise = computeNormais().finally(() => { normaisPromise = null; });
+    }
+    const payload = await normaisPromise;
+    normaisCache = { ts: Date.now(), payload };
+    res.writeHead(200, { "content-type": "application/json", "x-cache": "miss" });
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: String(err?.message || err) }));
+  }
+}
+
 // ── Estáticos + fallback SPA ────────────────────────────────
 async function handleStatic(pathname, res) {
   let filePath = path.normalize(path.join(DIST, pathname));
@@ -202,6 +264,7 @@ const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || "localhost"}`);
   if (url.pathname === "/api/news") return handleNews(url.searchParams.get("q"), res);
   if (url.pathname === "/api/chuva") return handleChuva(res);
+  if (url.pathname === "/api/normais") return handleNormais(res);
   if (url.pathname === "/api/health") {
     res.writeHead(200, { "content-type": "application/json" });
     return res.end(JSON.stringify({ ok: true }));
