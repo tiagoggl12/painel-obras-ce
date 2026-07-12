@@ -12,6 +12,8 @@ const PORT = Number(process.env.PORT || 3000);
 const NEWS_UPSTREAM = process.env.NEWS_UPSTREAM || "https://news.google.com/rss/search";
 const CHUVA_UPSTREAM = process.env.CHUVA_UPSTREAM || "https://api.open-meteo.com/v1/forecast";
 const NORMAIS_UPSTREAM = process.env.NORMAIS_UPSTREAM || "https://archive-api.open-meteo.com/v1/archive";
+const MALHA_UPSTREAM = process.env.MALHA_UPSTREAM ||
+  "https://servicodados.ibge.gov.br/api/v3/malhas/estados/23?formato=application/vnd.geo+json&qualidade=minima";
 const CACHE_TTL_MS = 10 * 60 * 1000; // 10 min (notícias)
 const CHUVA_TTL_MS = 30 * 60 * 1000; // 30 min (precipitação ao vivo)
 const NORMAIS_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 dias (climatologia)
@@ -231,6 +233,30 @@ async function handleNormais(res) {
   }
 }
 
+// ── /api/malha — contorno do Ceará (IBGE) ───────────────────
+let malhaCache = null; // { ts, payload }
+
+async function handleMalha(res) {
+  if (malhaCache && Date.now() - malhaCache.ts < NORMAIS_TTL_MS) {
+    res.writeHead(200, { "content-type": "application/json", "x-cache": "hit" });
+    return res.end(malhaCache.payload);
+  }
+  try {
+    const upstream = await fetch(MALHA_UPSTREAM, {
+      headers: { accept: "application/vnd.geo+json, application/json" },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!upstream.ok) throw new Error(`upstream ${upstream.status}`);
+    const payload = await upstream.text();
+    malhaCache = { ts: Date.now(), payload };
+    res.writeHead(200, { "content-type": "application/json", "x-cache": "miss" });
+    res.end(payload);
+  } catch (err) {
+    res.writeHead(502, { "content-type": "application/json" });
+    res.end(JSON.stringify({ error: String(err?.message || err) }));
+  }
+}
+
 // ── Estáticos + fallback SPA ────────────────────────────────
 async function handleStatic(pathname, res) {
   let filePath = path.normalize(path.join(DIST, pathname));
@@ -265,6 +291,7 @@ const server = http.createServer(async (req, res) => {
   if (url.pathname === "/api/news") return handleNews(url.searchParams.get("q"), res);
   if (url.pathname === "/api/chuva") return handleChuva(res);
   if (url.pathname === "/api/normais") return handleNormais(res);
+  if (url.pathname === "/api/malha") return handleMalha(res);
   if (url.pathname === "/api/health") {
     res.writeHead(200, { "content-type": "application/json" });
     return res.end(JSON.stringify({ ok: true }));
