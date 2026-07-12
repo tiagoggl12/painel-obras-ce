@@ -7,4 +7,8 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
   plugins: [react()],
   base: '/',
+  server: {
+    // Em dev, a API de notícias roda no server.js (npm start em outro terminal)
+    proxy: { '/api': 'http://localhost:3000' },
+  },
 })
