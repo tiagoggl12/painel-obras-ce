@@ -30,6 +30,9 @@
     "predeploy": "npm run build:gh",
     "deploy": "gh-pages -d dist"
   },
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "dependencies": {
     "leaflet": "^1.9.4",
     "react": "^19.2.4",
